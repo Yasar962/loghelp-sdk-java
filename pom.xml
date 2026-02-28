@@ -15,8 +15,8 @@
 
 	<!-- JitPack REQUIRES this format -->
 	<groupId>com.github.yasar962</groupId>
-	<artifactId>loghelp-spring-boot-starter</artifactId>
-	<version>1.0.0</version>
+	<artifactId>loghelp-sdk-java</artifactId>
+	<version>1.0.1</version>
 	<packaging>jar</packaging>
 
 	<name>LogHelp Spring Boot Starter</name>
