@@ -24,10 +24,9 @@ public class SummarizerAutoConfig {
 
         SummarizerAppender appender = new SummarizerAppender(ingestUrl, apiKey);
         appender.setContext(context);
-        appender.setName("LOGHELP_SUMMARIZER"); // Give it a name for debugging
+        appender.setName("LOGHELP_SUMMARIZER");
         appender.start();
 
-        // This is the "Root" of all logs in your app
         Logger rootLogger = context.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME);
         rootLogger.addAppender(appender);
 
