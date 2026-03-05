@@ -4,6 +4,7 @@ import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.LoggerContext;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import jakarta.annotation.PostConstruct;
@@ -36,7 +37,10 @@ public class SummarizerAutoConfig {
     }
 
     @Bean
-    public TraceIdFilter traceIdFilter() {
-        return new TraceIdFilter();
+    public FilterRegistrationBean<TraceIdFilter> traceIdFilter() {
+        FilterRegistrationBean<TraceIdFilter> registration = new FilterRegistrationBean<>();
+        registration.setFilter(new TraceIdFilter());
+        registration.setOrder(1);
+        return registration;
     }
 }
