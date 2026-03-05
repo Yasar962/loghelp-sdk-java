@@ -9,6 +9,7 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.util.Map;
 import java.util.concurrent.Executors;
 
 public class SummarizerAppender extends AppenderBase<ILoggingEvent> {
@@ -31,6 +32,7 @@ public class SummarizerAppender extends AppenderBase<ILoggingEvent> {
 
         try {
             String stackTrace = null;
+            System.out.println("MDC Map: " + event.getMDCPropertyMap());
             event.prepareForDeferredProcessing();
             if (event.getThrowableProxy() != null) {
                 stackTrace = ch.qos.logback.classic.spi.ThrowableProxyUtil
@@ -42,7 +44,10 @@ public class SummarizerAppender extends AppenderBase<ILoggingEvent> {
             payload.thread = event.getThreadName();
             payload.message = event.getFormattedMessage();
             payload.stackTrace = stackTrace;
-            payload.traceId = event.getMDCPropertyMap().get("traceId");
+            Map<String, String> mdc = event.getMDCPropertyMap();
+            if (mdc != null) {
+                payload.traceId = mdc.get("traceId");
+            }
 
             payload.timestamp = event.getTimeStamp();
 

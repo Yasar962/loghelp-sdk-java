@@ -9,6 +9,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.Ordered;
 
 @Configuration
 public class SummarizerAutoConfig {
@@ -40,7 +41,7 @@ public class SummarizerAutoConfig {
     public FilterRegistrationBean<TraceIdFilter> traceIdFilter() {
         FilterRegistrationBean<TraceIdFilter> registration = new FilterRegistrationBean<>();
         registration.setFilter(new TraceIdFilter());
-        registration.setOrder(1);
+        registration.setOrder(Ordered.HIGHEST_PRECEDENCE);
         return registration;
     }
 }
