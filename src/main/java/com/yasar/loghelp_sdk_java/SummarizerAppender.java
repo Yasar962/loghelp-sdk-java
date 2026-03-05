@@ -52,6 +52,7 @@ public class SummarizerAppender extends AppenderBase<ILoggingEvent> {
             payload.timestamp = event.getTimeStamp();
 
             String json = MAPPER.writeValueAsString(payload);
+            System.out.println("JSON PAYLOAD: " + json);
 
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create(ingestUrl))
