@@ -25,7 +25,7 @@ public class TraceIdFilter extends OncePerRequestFilter {
         if (traceId == null || traceId.isEmpty()) {
             traceId = UUID.randomUUID().toString();
         }
-
+        System.out.println("TRACE SET: " + traceId);
         MDC.put(TRACE_ID, traceId);
 
         try {

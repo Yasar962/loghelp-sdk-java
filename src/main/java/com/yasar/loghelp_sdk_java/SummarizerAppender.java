@@ -31,6 +31,7 @@ public class SummarizerAppender extends AppenderBase<ILoggingEvent> {
 
         try {
             String stackTrace = null;
+            event.prepareForDeferredProcessing();
             if (event.getThrowableProxy() != null) {
                 stackTrace = ch.qos.logback.classic.spi.ThrowableProxyUtil
                         .asString(event.getThrowableProxy());
