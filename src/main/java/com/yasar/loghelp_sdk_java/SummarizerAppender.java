@@ -41,7 +41,7 @@ public class SummarizerAppender extends AppenderBase<ILoggingEvent> {
             payload.thread = event.getThreadName();
             payload.message = event.getFormattedMessage();
             payload.stackTrace = stackTrace;
-            payload.traceId = MDC.get("traceId");
+            payload.traceId = event.getMDCPropertyMap().get("traceId");
 
             payload.timestamp = event.getTimeStamp();
 
