@@ -34,4 +34,9 @@ public class SummarizerAutoConfig {
         System.out.println(apiKey);
         System.out.println(ingestUrl);
     }
+
+    @Bean
+    public TraceIdFilter traceIdFilter() {
+        return new TraceIdFilter();
+    }
 }

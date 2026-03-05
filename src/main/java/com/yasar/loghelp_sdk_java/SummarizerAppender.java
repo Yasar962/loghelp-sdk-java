@@ -3,6 +3,7 @@ package com.yasar.loghelp_sdk_java;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.AppenderBase;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.slf4j.MDC;
 
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -34,13 +35,14 @@ public class SummarizerAppender extends AppenderBase<ILoggingEvent> {
                 stackTrace = ch.qos.logback.classic.spi.ThrowableProxyUtil
                         .asString(event.getThrowableProxy());
             }
-
             LogPayload payload = new LogPayload();
             payload.level = event.getLevel().toString();
             payload.logger = event.getLoggerName();
             payload.thread = event.getThreadName();
             payload.message = event.getFormattedMessage();
             payload.stackTrace = stackTrace;
+            payload.traceId = MDC.get("traceId");
+
             payload.timestamp = event.getTimeStamp();
 
             String json = MAPPER.writeValueAsString(payload);
@@ -55,17 +57,9 @@ public class SummarizerAppender extends AppenderBase<ILoggingEvent> {
             httpClient.sendAsync(request, HttpResponse.BodyHandlers.discarding());
 
         } catch (Exception e) {
-            // NEVER throw from logger
             System.err.println("[LOGHELP SDK] Failed to send log: " + e.getMessage());
         }
     }
 
-    private String escapeJson(String input) {
-        if (input == null) return "";
-        return input
-                .replace("\\", "\\\\")
-                .replace("\"", "\\\"")
-                .replace("\n", "\\n")
-                .replace("\r", "\\r");
-    }
+
 }

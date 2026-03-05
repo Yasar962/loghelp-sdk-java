@@ -7,4 +7,6 @@ public class LogPayload {
     public String message;
     public String stackTrace;
     public long timestamp;
+    public String traceId;
 }
+
