@@ -1,5 +1,6 @@
 package com.yasar.loghelp_sdk_java;
 
+import jakarta.servlet.DispatcherType;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -13,6 +14,12 @@ import java.util.UUID;
 public class TraceIdFilter extends OncePerRequestFilter {
 
     public static final String TRACE_ID = "traceId";
+    private static final String TRACE_ID_REQUEST_ATTR = "LOGHELP_TRACE_ID";
+
+    @Override
+    protected boolean shouldNotFilterErrorDispatch() {
+        return false; // ensure filter runs on ERROR dispatch
+    }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -20,17 +27,37 @@ public class TraceIdFilter extends OncePerRequestFilter {
                                     FilterChain filterChain)
             throws ServletException, IOException {
 
-        String traceId = request.getHeader("X-Trace-Id");
+        String traceId;
 
-        if (traceId == null || traceId.isEmpty()) {
-            traceId = UUID.randomUUID().toString();
+        // If already generated earlier in this request lifecycle
+        Object existing = request.getAttribute(TRACE_ID_REQUEST_ATTR);
+
+        if (existing != null) {
+            traceId = existing.toString();
+        } else {
+
+            // Try incoming header first (for microservice propagation)
+            traceId = request.getHeader("X-Trace-Id");
+
+            if (traceId == null || traceId.isEmpty()) {
+                traceId = UUID.randomUUID().toString();
+            }
+
+            request.setAttribute(TRACE_ID_REQUEST_ATTR, traceId);
         }
-        System.out.println("TRACE SET: " + traceId);
+
         MDC.put(TRACE_ID, traceId);
 
         try {
-            response.setHeader("X-Trace-Id", traceId);
+
+            if (DispatcherType.REQUEST.equals(request.getDispatcherType())) {
+                response.setHeader("X-Trace-Id", traceId);
+            }
+
+            System.out.println("TRACE ACTIVE: " + traceId + " | " + request.getRequestURI());
+
             filterChain.doFilter(request, response);
+
         } finally {
             MDC.remove(TRACE_ID);
         }
