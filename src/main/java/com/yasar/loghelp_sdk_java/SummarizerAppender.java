@@ -33,7 +33,6 @@ public class SummarizerAppender extends AppenderBase<ILoggingEvent> {
         try {
             String stackTrace = null;
             System.out.println("MDC Map: " + event.getMDCPropertyMap());
-            event.prepareForDeferredProcessing();
             if (event.getThrowableProxy() != null) {
                 stackTrace = ch.qos.logback.classic.spi.ThrowableProxyUtil
                         .asString(event.getThrowableProxy());
@@ -44,10 +43,24 @@ public class SummarizerAppender extends AppenderBase<ILoggingEvent> {
             payload.thread = event.getThreadName();
             payload.message = event.getFormattedMessage();
             payload.stackTrace = stackTrace;
+
             Map<String, String> mdc = event.getMDCPropertyMap();
+
+            String traceId = null;
+
             if (mdc != null) {
-                payload.traceId = mdc.get("traceId");
+                traceId = mdc.get("traceId");
             }
+
+            if (traceId == null) {
+                traceId = MDC.get("traceId");
+            }
+
+            if (traceId == null) {
+                traceId = "SYSTEM";
+            }
+
+            payload.traceId = traceId;
 
             payload.timestamp = event.getTimeStamp();
 
