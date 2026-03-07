@@ -14,11 +14,11 @@ import java.util.UUID;
 public class TraceIdFilter extends OncePerRequestFilter {
 
     public static final String TRACE_ID = "traceId";
-    private static final String TRACE_ID_REQUEST_ATTR = "LOGHELP_TRACE_ID";
+    private static final String TRACE_ATTR = "LOGHELP_TRACE_ID";
 
     @Override
     protected boolean shouldNotFilterErrorDispatch() {
-        return false; // ensure filter runs on ERROR dispatch
+        return false;
     }
 
     @Override
@@ -27,23 +27,16 @@ public class TraceIdFilter extends OncePerRequestFilter {
                                     FilterChain filterChain)
             throws ServletException, IOException {
 
-        String traceId;
+        String traceId = (String) request.getAttribute(TRACE_ATTR);
 
-        // If already generated earlier in this request lifecycle
-        Object existing = request.getAttribute(TRACE_ID_REQUEST_ATTR);
-
-        if (existing != null) {
-            traceId = existing.toString();
-        } else {
-
-            // Try incoming header first (for microservice propagation)
+        if (traceId == null) {
             traceId = request.getHeader("X-Trace-Id");
 
             if (traceId == null || traceId.isEmpty()) {
                 traceId = UUID.randomUUID().toString();
             }
 
-            request.setAttribute(TRACE_ID_REQUEST_ATTR, traceId);
+            request.setAttribute(TRACE_ATTR, traceId);
         }
 
         MDC.put(TRACE_ID, traceId);
@@ -54,11 +47,17 @@ public class TraceIdFilter extends OncePerRequestFilter {
                 response.setHeader("X-Trace-Id", traceId);
             }
 
-            System.out.println("TRACE ACTIVE: " + traceId + " | " + request.getRequestURI());
-
             filterChain.doFilter(request, response);
 
-        } finally {
+        }
+        catch (Throwable ex) {
+            // Log error BEFORE MDC is cleared
+            org.slf4j.LoggerFactory.getLogger("LOGHELP_ERROR_CAPTURE")
+                    .error("Unhandled exception", ex);
+
+            throw ex;
+        }
+        finally {
             MDC.remove(TRACE_ID);
         }
     }
