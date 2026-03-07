@@ -56,7 +56,11 @@ public class TraceIdFilter extends OncePerRequestFilter {
             // This catch block is great for your analyzer!
             // It logs BEFORE the finally block clears the MDC.
             org.slf4j.LoggerFactory.getLogger("LOGHELP_ERROR_CAPTURE")
-                    .error("Unhandled exception: traceId={}", traceId, ex);
+                    .error("LOGHELP_EXCEPTION_CAUGHT: [Method: {}] [URI: {}] - Message: {}",
+                            request.getMethod(),
+                            request.getRequestURI(),
+                            ex.getMessage(),
+                            ex);
             throw ex;
         } finally {
             // Clear it so the thread is clean for the next user
