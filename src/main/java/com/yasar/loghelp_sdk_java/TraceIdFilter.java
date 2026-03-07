@@ -27,37 +27,39 @@ public class TraceIdFilter extends OncePerRequestFilter {
                                     FilterChain filterChain)
             throws ServletException, IOException {
 
+        // 1. Check if we already have it in attributes (persists across dispatches)
         String traceId = (String) request.getAttribute(TRACE_ATTR);
 
         if (traceId == null) {
+            // 2. Fallback to Header
             traceId = request.getHeader("X-Trace-Id");
 
+            // 3. Generate new if both are missing
             if (traceId == null || traceId.isEmpty()) {
                 traceId = UUID.randomUUID().toString();
             }
 
+            // 4. CRITICAL: Store it in the request object so it survives
+            // the transition from /test/throw-error to /error
             request.setAttribute(TRACE_ATTR, traceId);
         }
 
+        // Always put it in MDC for the current thread
         MDC.put(TRACE_ID, traceId);
 
         try {
-
             if (DispatcherType.REQUEST.equals(request.getDispatcherType())) {
                 response.setHeader("X-Trace-Id", traceId);
             }
-
             filterChain.doFilter(request, response);
-
-        }
-        catch (Throwable ex) {
-            // Log error BEFORE MDC is cleared
+        } catch (Throwable ex) {
+            // This catch block is great for your analyzer!
+            // It logs BEFORE the finally block clears the MDC.
             org.slf4j.LoggerFactory.getLogger("LOGHELP_ERROR_CAPTURE")
-                    .error("Unhandled exception", ex);
-
+                    .error("Unhandled exception: traceId={}", traceId, ex);
             throw ex;
-        }
-        finally {
+        } finally {
+            // Clear it so the thread is clean for the next user
             MDC.remove(TRACE_ID);
         }
     }
