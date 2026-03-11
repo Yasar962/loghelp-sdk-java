@@ -18,7 +18,7 @@ public class SummarizerAppender extends AppenderBase<ILoggingEvent> {
     private final String apiKey;
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
-    private final HttpClient httpClient = HttpClient.newBuilder()
+    private static final HttpClient httpClient = HttpClient.newBuilder()
             .executor(Executors.newVirtualThreadPerTaskExecutor())
             .build();
 
@@ -31,41 +31,33 @@ public class SummarizerAppender extends AppenderBase<ILoggingEvent> {
     protected void append(ILoggingEvent event) {
 
         try {
+
+            if (event.getLoggerName().startsWith("com.yasar.loghelp")) {
+                return;
+            }
+
             String stackTrace = null;
-            System.out.println("MDC Map: " + event.getMDCPropertyMap());
+
             if (event.getThrowableProxy() != null) {
                 stackTrace = ch.qos.logback.classic.spi.ThrowableProxyUtil
                         .asString(event.getThrowableProxy());
             }
+
             LogPayload payload = new LogPayload();
+
             payload.level = event.getLevel().toString();
             payload.logger = event.getLoggerName();
             payload.thread = event.getThreadName();
             payload.message = event.getFormattedMessage();
             payload.stackTrace = stackTrace;
 
-            Map<String, String> mdc = event.getMDCPropertyMap();
-
-            String traceId = null;
-
-            if (mdc != null) {
-                traceId = mdc.get("traceId");
-            }
-
-            if (traceId == null) {
-                traceId = MDC.get("traceId");
-            }
-
-            if (traceId == null) {
-                traceId = "SYSTEM";
-            }
+            String traceId = event.getMDCPropertyMap()
+                    .getOrDefault("traceId", "SYSTEM");
 
             payload.traceId = traceId;
-
             payload.timestamp = event.getTimeStamp();
 
             String json = MAPPER.writeValueAsString(payload);
-            System.out.println("JSON PAYLOAD: " + json);
 
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create(ingestUrl))

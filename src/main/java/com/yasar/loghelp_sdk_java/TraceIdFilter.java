@@ -14,7 +14,7 @@ import java.util.UUID;
 public class TraceIdFilter extends OncePerRequestFilter {
 
     public static final String TRACE_ID = "traceId";
-    private static final String TRACE_ATTR = "LOGHELP_TRACE_ID";
+    public static final String TRACE_ATTR = "LOGHELP_TRACE_ID";
 
     @Override
     protected boolean shouldNotFilterErrorDispatch() {
@@ -56,10 +56,9 @@ public class TraceIdFilter extends OncePerRequestFilter {
             // This catch block is great for your analyzer!
             // It logs BEFORE the finally block clears the MDC.
             org.slf4j.LoggerFactory.getLogger("LOGHELP_ERROR_CAPTURE")
-                    .error("LOGHELP_EXCEPTION_CAUGHT: [Method: {}] [URI: {}] - Message: {}",
+                    .error("Unhandled exception [{} {}]",
                             request.getMethod(),
                             request.getRequestURI(),
-                            ex.getMessage(),
                             ex);
             throw ex;
         } finally {

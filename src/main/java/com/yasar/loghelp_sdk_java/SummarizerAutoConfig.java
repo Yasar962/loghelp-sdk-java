@@ -32,8 +32,10 @@ public class SummarizerAutoConfig {
         Logger rootLogger = context.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME);
         rootLogger.addAppender(appender);
 
-        System.out.println(">> [LOGHELP SDK] Successfully attached SummarizerAppender to Root Logger!");
-        System.out.println(apiKey);
+        LoggerFactory.getLogger(SummarizerAutoConfig.class)
+                .info("LogHelp SDK initialized");
+        MetricSender.init(ingestUrl, apiKey);
+
         System.out.println(ingestUrl);
     }
 
