@@ -18,7 +18,6 @@ public class PerformanceInterceptor implements HandlerInterceptor {
                              Object handler) {
 
         request.setAttribute(START_TIME, System.nanoTime());
-
         return true;
     }
 
@@ -35,20 +34,31 @@ public class PerformanceInterceptor implements HandlerInterceptor {
 
             long duration = (System.nanoTime() - startTime) / 1_000_000;
 
+            // Detect original path when an error occurs
+            String originalPath =
+                    (String) request.getAttribute("jakarta.servlet.error.request_uri");
+
             String pattern = (String) request.getAttribute(
                     HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE);
 
-            String finalPath = (pattern != null)
-                    ? pattern
-                    : request.getRequestURI();
+            String finalPath;
 
-            if (finalPath.startsWith("/error") ||
-                    finalPath.startsWith("/actuator") ||
+            if (originalPath != null) {
+                finalPath = originalPath;
+            } else if (pattern != null) {
+                finalPath = pattern;
+            } else {
+                finalPath = request.getRequestURI();
+            }
+
+            // Skip non-API internal paths
+            if (finalPath.startsWith("/actuator") ||
                     finalPath.startsWith("/favicon")) {
                 return;
             }
 
-            String traceId = (String) request.getAttribute(TraceIdFilter.TRACE_ATTR);
+            String traceId =
+                    (String) request.getAttribute(TraceIdFilter.TRACE_ATTR);
 
             if (traceId == null) {
                 traceId = MDC.get("traceId");
@@ -61,9 +71,12 @@ public class PerformanceInterceptor implements HandlerInterceptor {
                     duration,
                     traceId
             );
-            System.out.println("LOGHELP METRIC SENT: " + finalPath);
+
             MetricSender.send(metric);
-        } catch (Exception ignored) {
+
+        } catch (Exception e) {
+            // Do not break user request if metric fails
+            e.printStackTrace();
         }
     }
 }
