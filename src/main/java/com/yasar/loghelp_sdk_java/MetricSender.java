@@ -42,7 +42,8 @@ public class MetricSender {
 
             httpClient.sendAsync(request, HttpResponse.BodyHandlers.discarding());
 
-        } catch (Exception ignored) {
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 }

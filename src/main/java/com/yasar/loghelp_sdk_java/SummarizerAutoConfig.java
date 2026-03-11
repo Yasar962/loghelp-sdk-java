@@ -10,8 +10,10 @@ import org.springframework.context.annotation.Configuration;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.Ordered;
+import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
-@Configuration
+@AutoConfiguration
 public class SummarizerAutoConfig {
 
     @Value("${loghelp.summarizer.url}")
@@ -34,6 +36,7 @@ public class SummarizerAutoConfig {
 
         LoggerFactory.getLogger(SummarizerAutoConfig.class)
                 .info("LogHelp SDK initialized");
+
         MetricSender.init(ingestUrl, apiKey);
 
         System.out.println(ingestUrl);
@@ -45,5 +48,19 @@ public class SummarizerAutoConfig {
         registration.setFilter(new TraceIdFilter());
         registration.setOrder(Ordered.HIGHEST_PRECEDENCE);
         return registration;
+    }
+    @Bean
+    public PerformanceInterceptor performanceInterceptor() {
+        return new PerformanceInterceptor();
+    }
+
+    @Bean
+    public WebMvcConfigurer loghelpWebMvcConfigurer(PerformanceInterceptor interceptor) {
+        return new WebMvcConfigurer() {
+            @Override
+            public void addInterceptors(InterceptorRegistry registry) {
+                registry.addInterceptor(interceptor);
+            }
+        };
     }
 }

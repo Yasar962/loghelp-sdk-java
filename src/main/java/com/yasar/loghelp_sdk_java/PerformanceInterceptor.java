@@ -61,7 +61,7 @@ public class PerformanceInterceptor implements HandlerInterceptor {
                     duration,
                     traceId
             );
-
+            System.out.println("LOGHELP METRIC SENT: " + finalPath);
             MetricSender.send(metric);
         } catch (Exception ignored) {
         }
